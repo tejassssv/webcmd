@@ -1,160 +1,219 @@
-<img width="1280" height="640" alt="Webcmd — stop paying agents to rediscover the web" src="docs/readme-hero-v2.png" />
+# 🧠 Autonomous Web Research Agent
 
+### An AI agent that can take a research goal, search the web, understand the results, and remember what it learned.
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@agentrhq/webcmd">
-    <img alt="NPM version" src="https://img.shields.io/npm/v/@agentrhq/webcmd.svg?style=for-the-badge&color=1E88E5&labelColor=000000">
-  </a>
-  <a href="https://webcmd.dev/docs">
-    <img alt="Documentation" src="https://img.shields.io/badge/docs-webcmd.dev-7C3AED.svg?style=for-the-badge&labelColor=000000">
-  </a>
-  <a href="https://github.com/agentrhq/webcmd/blob/main/LICENSE">
-    <img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-1E88E5.svg?style=for-the-badge&labelColor=000000">
-  </a>
-  <a href="https://discord.gg/9YP2C9tvMp">
-    <img alt="Join the community on Discord" src="https://img.shields.io/badge/Join%20the%20community-5865F2.svg?style=for-the-badge&logo=discord&logoColor=white&labelColor=000000&logoWidth=20">
-  </a>
-  <a href="https://x.com/agentrhq">
-    <img alt="Follow AgentR on X" src="https://img.shields.io/badge/Built%20by%20%40agentrhq-000000.svg?style=for-the-badge&logo=x&logoColor=white&labelColor=000000&logoWidth=20">
-  </a>
-</p>
+We built this project as a simple experiment to see how far we could take an AI assistant beyond just asking questions and getting answers.
 
-# Webcmd
-
-**Self-learning browser infra for AI agents.**
-
-Webcmd learns the navigational context of websites as agents use them, then
-turns that knowledge into local memory for faster, cheaper, more reliable
-browser automation. The goal is simple: stop making agents rediscover the same
-sites on every run and cut browser-agent token spend by up to 90%.
-
-Webcmd pairs live browser control with a self-learning memory layer:
-
-| Layer | Scenario | What Webcmd Helps With |
-| --- | --- | --- |
-| 0. Live browser control | The site is unfamiliar. | Use `webcmd browser` to inspect, click, type, extract, capture network calls, and complete the task in a real browser. |
-| 1. Sitemap memory | The site is familiar, but the action space is not fully known. | Capture an agent-facing sitemap of observed pages, states, actions, workflows, APIs, pitfalls, and fallback paths. |
-
-## Demo
-
-https://github.com/user-attachments/assets/bdb65307-9e2a-4d58-9175-45d59528ae37
-
-## Quick Start
-
-### Agent prompt
+Normally, an AI works like this:
 
 ```text
-Fetch and follow https://raw.githubusercontent.com/agentrhq/webcmd/main/start.md to set up Webcmd end to end.
+Question → AI → Answer
 ```
 
-### Manual
+Our idea was a little different:
 
-Webcmd requires Node.js 20.6+.
+The agent gets a goal from the user, uses **Groq** to decide what to do, uses **webcmd** to interact with the web, and then uses Groq again to understand the results.
+
+It also saves useful learnings in a local `memory.json` file so that those learnings can be used in future tasks.
+
+---
+
+## 🚀 What We Built
+
+The main idea is to make the AI responsible for more than just generating text.
+
+For every task, our agent goes through these steps:
+
+1. **Understand the user's goal**
+2. **Create a research instruction**
+3. **Use webcmd to search the web**
+4. **Read and analyze the results**
+5. **Give the user a final answer**
+6. **Save one useful learning for the next task**
+
+So the agent doesn't just answer once. It can also carry something useful from one task into the next.
+
+---
+
+
+For example, if the user asks:
+
+> "Research the latest developments in AI agents."
+
+Groq first decides what kind of web research should be done. That instruction is passed to `webcmd`.
+
+Once the results come back, Groq analyzes them and creates the final response.
+
+At the end, the agent also tries to identify something useful that it learned from the task and saves it.
+
+---
+
+## 🧠 Memory
+
+One part we wanted to experiment with was **memory**.
+
+The agent stores its learnings in:
+
+```text
+memory.json
+```
+
+For example:
+
+```json
+{
+  "learnings": [
+    "Use more specific searches when researching fast-changing technology topics."
+  ]
+}
+```
+
+When another task starts, these previous learnings are given to the planner.
+
+This means the agent has at least a basic form of **experience from previous tasks**, instead of starting completely from zero every time.
+
+We kept the memory system as a simple JSON file for this prototype so that it is easy to understand, test, and improve later.
+
+---
+
+## 🛠️ Technologies We Used
+
+| Technology     | Why we used it                              |
+| -------------- | ------------------------------------------- |
+| **Node.js**    | Main application and agent logic            |
+| **Groq API**   | Connecting our application to the AI model  |
+| **Groq Model** | Planning and understanding research results |
+| **webcmd**     | Searching/interacting with the live web     |
+| **JSON**       | Storing agent memory                        |
+| **VS Code**    | Development and testing                     |
+
+We used the OpenAI-compatible interface provided by Groq through the Node.js SDK.
+
+---
+
+## 💻 Running the Project
+
+Install the dependencies:
 
 ```bash
-npm install -g @agentrhq/webcmd
-webcmd skills add
+npm install
 ```
 
-When prompted, choose Claude, Codex, another supported harness, or a custom
-skills path. That installs exactly one skill, `webcmd-browser`.
+Create a `.env` file:
 
-Load or tag `webcmd-browser` only for live browser work, then describe the
-outcome you want. Installation and setup commands do not require that skill.
-
-```text
-Use webcmd to research the latest discussions about browser automation across Hacker News and Reddit, then return a concise comparison with source links.
+```env
+GROQ_API_KEY=your_groq_api_key
 ```
 
-## What You Can Ask
-
-- “Use webcmd to research agentic browser automation on PubMed and return the title, authors, publication date, abstract, and URL for each result.”
-- “Use webcmd to find active AI infrastructure companies in the YC company directory and return the company, batch, description, location, profile URL, and source links. Keep it read-only.”
-- “Use webcmd to look up parts on Grainger by part number and return price, stock, minimum order quantity, lead time, and product URL.”
-- “Use webcmd with my logged-in `work` profile to summarize unread LinkedIn messages from the last seven days and return the sender, subject or opening text, received time, and conversation URL.”
-- “Use webcmd to check Grainger part prices and SAP Ariba purchase-order status, then return a combined summary.”
-
-## See It in Action
-
-```text
-Use webcmd with my logged-in `social` profile to collect my recent X bookmarks and return the author, text, and URL.
-```
-
-The agent uses the logged-in profile to complete the task in a real browser.
-Along the way, Webcmd quietly retains useful navigation context so later agents
-can avoid repeating the same exploration.
-
-## Where Webcmd Works
-
-Webcmd can work through authenticated browser sessions across research, social,
-AI, shopping, and booking products.
-
-| Group | Supported surfaces | Representative outcomes |
-| --- | --- | --- |
-| research and communities | Hacker News, Reddit, PubMed | Compare current discussions, find primary research, and return concise summaries with source links. |
-| social and professional | X/Twitter, LinkedIn, TikTok | Collect bookmarks, monitor public posts, or research people and creators with a named profile when needed. |
-| AI tools | ChatGPT, Claude, Gemini, NotebookLM | Retrieve conversations, research outputs, notebooks, and generated materials from the tools you already use. |
-| shopping and bookings | Amazon, Blinkit, Zepto, BigBasket, District, Practo | Compare products, availability, prices, appointments, events, and delivery options. |
-
-This list is illustrative. Webcmd can operate other websites through the same
-live browser workflow.
-
-## How Self-Learning Works
-
-<img width="1672" height="941" alt="How Webcmd learns: load memory, use the live web, keep useful learnings, and help the next agent" src="docs/readme-self-learning.png" />
-
-Learning stays quiet and selective: the live browser is always truth, Webcmd
-never explores just to learn, and a memory failure never blocks the task. First
-access may use a Webcmd Cloud seed; subsequent learning stays local.
-
-For local, multi-step browser exploration, agents can send one sandboxed
-Playwright-style program to an explicit browser session:
+Then run the agent:
 
 ```bash
-webcmd --profile work session create "Work Project" -f json
-# id: work-project-k7
-webcmd --profile work --session work-project-k7 browser tabs
-webcmd --profile work --session work-project-k7 browser run --file explore.js
-printf 'return await page.title();' \
-  | webcmd --profile work --session work-project-k7 browser run --stdin
-webcmd --profile work session close work-project-k7
+node index.js "Research the latest developments in AI agents"
 ```
 
-Profiles are cookie jars; Sessions are independent browser windows within a
-profile, so Session IDs are immutable, Profile-scoped, and safe to reuse for
-that Session's lifetime. Parallel agents should create separate Sessions.
-Raw browser commands require an explicit readable Session ID.
+You can also start it without a command and enter the research goal manually:
 
-## Benchmarks
+```bash
+node index.js
+```
 
-On [BU Bench V1](https://github.com/browser-use/benchmark#bu-bench-v1), a
-100-task browser automation benchmark, Webcmd recorded the highest accuracy and
-lowest estimated controller cost per completed task, and fewest agent turns per
-completed task in this comparison.
+---
 
-![BU Bench V1 comparison: webcmd leads accuracy at 67%, cost per completed task at $0.255, and agent turns per completed task at 9.8](./benchmarks/charts/bu-bench-readme.svg)
+## 🧪 Testing
 
-All tools used the same Pi controller, controller model, Codex `gpt-5.4` judge,
-and CloakBrowser engine. This is a stronger judge than the original BU Bench
-setup, whose [current runner uses Gemini 2.5 Flash](https://github.com/browser-use/benchmark/blob/main/run_eval.py#L37-L38).
-Accuracy is passed tasks out of 100. Cost and agent turns are averaged over
-completed tasks; cost excludes judge usage. See the
-[benchmark report](./benchmarks/README.md) for category results, methodology,
-architectural analysis, and reproduction steps.
+We developed and tested the project in **VS Code**.
 
-## Learn More
+During testing, we focused on the complete flow rather than just checking whether the AI could generate an answer.
 
-Webcmd Cloud can run supported commands and browser sessions on hosted infrastructure. It is in active development and is not yet stable.
+We tested whether the agent could:
 
-- [Prompt Cookbook](https://webcmd.dev/docs/agent-prompts)
-- [How Webcmd Works](https://webcmd.dev/docs/concepts)
-- [Local or Cloud](https://webcmd.dev/docs/local-or-cloud)
-- [Command Surface](https://webcmd.dev/docs/cli-reference)
+* Understand different research goals
+* Generate useful instructions for `webcmd`
+* Process the returned web information
+* Generate a meaningful final response
+* Save new learnings
+* Use previous learnings in later tasks
+* Handle incorrect or unexpected responses from the API
 
-## Contributing
+This helped us improve the flow and make the different parts work together reliably.
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
+---
 
-## License
+## 📁 Project Structure
 
-Released under the terms in [`LICENSE`](./LICENSE).
+```text
+.
+├── index.js
+├── memory.json
+├── package.json
+├── .env
+├── .gitignore
+└── README.md
+```
+
+The main logic is inside `index.js`.
+
+Some of the important functions are:
+
+* `runAgent()` — controls the complete process
+* `createGroqClient()` — connects to Groq
+* `useLiveWeb()` — handles web research through webcmd
+* `loadMemory()` — loads previous learnings
+* `saveMemory()` — saves new learnings
+* `parseJsonSafely()` — safely handles model responses
+
+---
+
+## 🎯 Why We Think This Is Interesting
+
+We didn't want to build just another chatbot.
+
+The interesting part of our project is the connection between **AI reasoning, a real web tool, and memory**.
+
+The AI decides what to research.
+
+`webcmd` actually performs the web interaction.
+
+The AI then looks at what came back and decides what is useful.
+
+Finally, the agent saves something from that experience for later.
+
+That gives us a small but working example of an **agent that can plan, act, observe, and learn**.
+
+---
+
+## 🔮 What's Next?
+
+There is a lot we can build on top of the current version.
+
+Some of the things we would like to add are:
+
+* Better long-term memory
+* Multi-step research
+* Source verification
+* Multiple tools
+* Parallel research
+* Automatic report generation
+* Multiple specialized agents
+
+The current version is our starting point for exploring these ideas.
+
+---
+
+## 💡 Our Goal
+
+The bigger idea behind this project is simple:
+
+> **We want to move from AI that only answers questions to AI that can actually work toward a goal.**
+
+Give it a goal.
+
+Let it figure out what to do.
+
+Let it use the right tools.
+
+Let it learn from what happened.
+
+And use that experience the next time.
+
+### 🧠 Plan. Search. Understand. Learn.
